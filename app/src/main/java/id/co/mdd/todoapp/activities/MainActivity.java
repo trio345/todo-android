@@ -30,6 +30,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static String id = "data";
     TodoAdapter todoAdapter;
     ActivityMainBinding binding;
     TodoRepository todoRepository;
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
                         String data = new Gson().toJson(response.body());
                         Log.e("data", "data" + data);
 
-                        if (response.isSuccessful()){
+                        if (response.code() >= 200 && response.code() < 300){
                             Toast("Berhasil ditambah");
                         } else {
                             Toast("Gagal ditambah");
@@ -126,9 +127,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<TodoBaseModel> call, Response<TodoBaseModel> response) {
                 if (response.code() >= 200 & response.code() <= 299) {
-                    Toast(response.body().getMessage());
+                    Toast("Berhasil dihapus!");
+                    startActivity(new Intent(MainActivity.this, MainActivity.class));
+                    finish();
                 } else {
-                    Toast(response.body().getMessage());
+                    Toast(response.message());
                 }
             }
 
@@ -138,5 +141,15 @@ public class MainActivity extends AppCompatActivity {
                 Toast("Gagal menghapus!");
             }
         });
+    }
+
+
+    public void updateData(View view) {
+        int id = view.getId();
+        Intent intent = new Intent();
+        intent.putExtra(MainActivity.id, id);
+        setResult(UpdateActivity.code, intent);
+        startActivity(new Intent(this, UpdateActivity.class));
+        finish();
     }
 }
