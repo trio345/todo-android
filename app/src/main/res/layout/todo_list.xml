@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="todos"
+            type="id.co.mdd.todoapp.models.DataItem" />
+        <variable
+            name="date"
+            type="String" />
+
+        <variable
+            name="logo"
+            type="String" />
+    </data>
+
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cvTodos"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_margin="@dimen/space_default"
+        tools:context=".activities.MainActivity"
+        android:backgroundTint="@color/colorPrimaryDark"
+    >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/ivIcon"
+                android:layout_width="120dp"
+                android:layout_height="150dp"
+                android:src="@drawable/done_ic"
+
+                tools:src="@tools:sample/avatars" />
+
+            <TextView
+                android:id="@+id/tvHead"
+                android:layout_width="match_parent"
+                android:layout_margin="@dimen/space_default"
+                android:layout_height="wrap_content"
+                android:text="@{todos.task}"
+                android:layout_toEndOf="@+id/ivIcon"
+                android:textSize="20sp"
+                android:textColor="@android:color/white"
+                tools:text="Sarapan Nasi uduk"
+                />
+            <TextView
+                android:id="@+id/date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{date}"
+                android:layout_toEndOf="@+id/ivIcon"
+                android:layout_marginTop="50dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/white"
+                tools:text="20 Agustus 2019"
+                />
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/ivIcon"
+                android:layout_below="@+id/date"
+                android:onClick="deleteData"
+                android:layout_marginEnd="10dp"
+                android:text="DELETE" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUpdate"
+                android:layout_width="wrap_content"
+                android:layout_toEndOf="@+id/btnDelete"
+                android:layout_below="@+id/date"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="304dp"
+                android:text="UPDATE" />
+
+
+        </RelativeLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+
+</layout>
