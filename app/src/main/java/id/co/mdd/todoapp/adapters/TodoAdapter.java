@@ -27,11 +27,23 @@ import id.co.mdd.todoapp.models.TodoBaseModel;
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
     private List<DataItem> todos = new ArrayList<>();
     private Context context;
+    public TodosListener listener;
 
     public void setTodos(Context context, List<DataItem> todos) {
         this.todos = todos;
         this.context = context;
         notifyDataSetChanged();
+    }
+
+    public interface TodosListener{
+        void deleteData(DataItem dataItem);
+        void updateData(DataItem dataItem);
+        void updateStatus(DataItem dataItem);
+
+    }
+
+    public void setListener(TodosListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -68,20 +80,30 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder> {
         }
 
         @RequiresApi(api = Build.VERSION_CODES.O)
-        public void bindData(DataItem todoBaseModel) {
-            binding.setTodos(todoBaseModel);
+        public void bindData(DataItem todoData) {
+            binding.setTodos(todoData);
+
+//            binding.btnDelete.setOnClickListener(view -> );
 
             //support api 26
 //            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneId.of("UTC"));
-//
 //            LocalDateTime date = LocalDateTime.parse(todoBaseModel.getCreatedAt(), dateTimeFormatter);
 //
 //            DateTimeFormatter localFormatter = DateTimeFormatter
 //                    .ofPattern("EEEE, dd MMMM yyyy", new Locale("id", "ID"));
 //            String localeDate = date.format(localFormatter);
-//
+
 //            binding.setDate(localeDate);
+            binding.setLogo(todoData.isStatus());
+
+            binding.btnDelete.setOnClickListener(view -> listener.deleteData(todoData));
+            binding.btnUpdate.setOnClickListener(view -> listener.updateData(todoData));
+
+            binding.ivIcon.setOnClickListener(view -> listener.updateStatus(todoData));
+
         }
+
+
 
 
 

@@ -24,7 +24,7 @@ public interface TodoService {
 
     @Headers("Content-Type: application/json")
     @PUT("todos/{id}")
-    Call<TodoBaseModel> updateTodo(@Path("id") int id);
+    Call<TodoBaseModel> updateTodo(@Path("id") int id, @Body DataItem data);
 
     @DELETE("todos/{id}")
     Call<TodoBaseModel> deleteTodo(@Path("id") int id);

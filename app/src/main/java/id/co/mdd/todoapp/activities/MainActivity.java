@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -20,6 +21,7 @@ import java.util.List;
 import id.co.mdd.todoapp.R;
 import id.co.mdd.todoapp.adapters.TodoAdapter;
 import id.co.mdd.todoapp.databinding.ActivityMainBinding;
+import id.co.mdd.todoapp.databinding.ActivityUpdateBinding;
 import id.co.mdd.todoapp.models.DataItem;
 import id.co.mdd.todoapp.models.TodoBaseModel;
 import id.co.mdd.todoapp.repositories.todo.TodoRepository;
@@ -33,47 +35,32 @@ public class MainActivity extends AppCompatActivity {
     private static String id = "data";
     TodoAdapter todoAdapter;
     ActivityMainBinding binding;
+    TodoViewModel viewModel;
     TodoRepository todoRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
         todoAdapter = new TodoAdapter();
+        getAllDatas();
+        eventListener();
+    }
 
-        TodoViewModel todoViewModel = new ViewModelProvider(this).get(TodoViewModel.class);
 
-        todoViewModel.todoData();
-//        postData();
-
-        binding.rvTodo.setLayoutManager(new LinearLayoutManager(this,
-                LinearLayoutManager.VERTICAL, false));
-        todoRepository = new TodoRepository();
-        todoRepository.service.getTodos().enqueue(new Callback<TodoBaseModel>() {
+    protected void getAllDatas(){
+        viewModel = new ViewModelProvider(this).get(TodoViewModel.class);
+        viewModel.getPostLiveData().observe(this, new Observer<TodoBaseModel>() {
             @Override
-            public void onResponse(Call<TodoBaseModel> call, Response<TodoBaseModel> response) {
-                todoAdapter.setTodos(MainActivity.this,response.body().getData());
-            }
-
-            @Override
-            public void onFailure(Call<TodoBaseModel> call, Throwable t) {
-                t.printStackTrace();
+            public void onChanged(TodoBaseModel todoBaseModel) {
+                List<DataItem> dataItems = todoBaseModel.getData();
+                todoAdapter.setTodos(getApplicationContext(), dataItems);
+                binding.rvTodo.setAdapter(todoAdapter);
+                binding.rvTodo.setLayoutManager(new LinearLayoutManager(getApplicationContext(),
+                            LinearLayoutManager.VERTICAL, false
+                        ));
             }
         });
-
-        binding.btnTambah.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                postData();
-            }
-        });
-
-
-        binding.rvTodo.setAdapter(todoAdapter);
-//        binding.setViewModel(todoViewModel);
     }
 
     @Override
@@ -82,6 +69,90 @@ public class MainActivity extends AppCompatActivity {
 
         binding = null;
     }
+
+
+    private void eventListener(){
+
+        todoRepository = new TodoRepository();
+
+        todoAdapter.setListener(new TodoAdapter.TodosListener() {
+            @Override
+            public void deleteData(DataItem dataItem) {
+                viewModel.deleteTodo(dataItem.getId());
+                startActivity(new Intent(MainActivity.this, MainActivity.class));
+                finish();
+            }
+
+            @Override
+            public void updateData(DataItem dataItem) {
+                ActivityUpdateBinding updateBinding;
+                updateBinding = DataBindingUtil.setContentView(MainActivity.this, R.layout.activity_update);
+
+                if ( dataItem != null){
+                    updateBinding.etData.setText(dataItem.getTask());
+                    updateBinding.swStatus.setChecked(dataItem.isStatus());
+                }
+
+                updateBinding.btnUpdate.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (TextUtils.isEmpty(updateBinding.etData.getText())){
+                            updateBinding.etData.setError("data tidak boleh kosong");
+                        } else {
+                            DataItem data = new DataItem();
+                            data.setTask(updateBinding.etData.getText().toString());
+                            data.setStatus(updateBinding.swStatus.isChecked());
+                            Log.e("id", "id " + dataItem.getId());
+                            data.setId(dataItem.getId());
+
+                            todoRepository.service.updateTodo(dataItem.getId(), data).enqueue(new Callback<TodoBaseModel>() {
+                                @Override
+                                public void onResponse(Call<TodoBaseModel> call, Response<TodoBaseModel> response) {
+
+                                }
+
+                                @Override
+                                public void onFailure(Call<TodoBaseModel> call, Throwable t) {
+                                t.printStackTrace();
+                                }
+                            });
+
+                        }
+                    }
+                });
+
+            }
+
+            @Override
+            public void updateStatus(DataItem dataItem) {
+                DataItem dataTodo = new DataItem();
+                if (dataItem.isStatus()){
+                    dataTodo.setStatus(false);
+                } else {
+                    dataTodo.setStatus(true);
+                }
+
+                dataTodo.setTask(dataItem.getTask());
+                dataTodo.setId(dataItem.getId());
+
+                todoRepository.service.updateTodo(dataItem.getId(), dataTodo).enqueue(new Callback<TodoBaseModel>() {
+                    @Override
+                    public void onResponse(Call<TodoBaseModel> call, Response<TodoBaseModel> response) {
+                        startActivity(new Intent(MainActivity.this, MainActivity.class));
+                    }
+
+                    @Override
+                    public void onFailure(Call<TodoBaseModel> call, Throwable t) {
+                        t.printStackTrace();
+                        startActivity(new Intent(MainActivity.this, MainActivity.class));
+                    }
+                });
+
+
+            }
+        });
+    }
+
 
 
     private void postData(){
@@ -121,35 +192,4 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
     }
 
-    public void deleteData(View view) {
-        int id = view.getId();
-        todoRepository.service.deleteTodo(id).enqueue(new Callback<TodoBaseModel>() {
-            @Override
-            public void onResponse(Call<TodoBaseModel> call, Response<TodoBaseModel> response) {
-                if (response.code() >= 200 & response.code() <= 299) {
-                    Toast("Berhasil dihapus!");
-                    startActivity(new Intent(MainActivity.this, MainActivity.class));
-                    finish();
-                } else {
-                    Toast(response.message());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TodoBaseModel> call, Throwable t) {
-                t.printStackTrace();
-                Toast("Gagal menghapus!");
-            }
-        });
-    }
-
-
-    public void updateData(View view) {
-        int id = view.getId();
-        Intent intent = new Intent();
-        intent.putExtra(MainActivity.id, id);
-        setResult(UpdateActivity.code, intent);
-        startActivity(new Intent(this, UpdateActivity.class));
-        finish();
-    }
 }
